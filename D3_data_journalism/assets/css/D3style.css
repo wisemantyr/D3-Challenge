@@ -20,7 +20,7 @@
 
   .tooltip {
     position: absolute;
-    width: 100px;
+    width: 115px;
     height: 50px;
     padding: 10px;
     font: 10px sans-serif;
@@ -55,4 +55,10 @@
 
   #page-title {
     border-bottom: 1px solid black;
+    font-style: italic;
   }
+
+  .article {
+    padding-top: 25px
+  }
+  

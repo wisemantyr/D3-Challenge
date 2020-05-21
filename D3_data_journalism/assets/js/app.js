@@ -64,7 +64,6 @@ function renderYAxis(newYScale, yAxis) {
 }
 
 function renderPointsX(scatterPoints, newXScale, chosenX) {
-
     scatterPoints.transition()
         .duration(1000)
         .attr("cx", d => newXScale(d[chosenX]));
@@ -72,7 +71,6 @@ function renderPointsX(scatterPoints, newXScale, chosenX) {
 }
 
 function renderPointsY(scatterPoints, newYScale, chosenY) {
-
     scatterPoints.transition()
         .duration(1000)
         .attr("cy", d => newYScale(d[chosenY]));
@@ -92,7 +90,7 @@ function renderTextY (circleText, newYScale, chosenY) {
     return circleText;
 }
 
-function updateToolTip(chosenX, chosenY, scatterPoints) {
+function updateToolTip(chosenX, chosenY, circleText) {
     var xLabel;
     var yLabel;
 
@@ -123,9 +121,9 @@ function updateToolTip(chosenX, chosenY, scatterPoints) {
             return (`${d.state} <br> ${xLabel}: ${d[chosenX]}% <br> ${yLabel}: ${d[chosenY]}`)
         });
 
-    scatterPoints.call(toolTip)
+    circleText.call(toolTip)
 
-    scatterPoints
+    circleText
         .on("mouseover", function (d) {
             toolTip.show(d);
         })
@@ -133,7 +131,7 @@ function updateToolTip(chosenX, chosenY, scatterPoints) {
             toolTip.hide(d);
         });
 
-    return scatterPoints;
+    return circleText;
 }
 
 d3.csv("assets/data/data.csv").then(function (censusData) {
@@ -254,8 +252,7 @@ d3.csv("assets/data/data.csv").then(function (censusData) {
                 xAxis = renderXAxis(xLinearScale, xAxis);
 
                 scatterPoints = renderPointsX(scatterPoints, xLinearScale, chosenX);
-                scatterPoints = updateToolTip(chosenX, chosenY, scatterPoints);
-
+                circleText = updateToolTip(chosenX, chosenY, circleText);
                 circleText = renderTextX(circleText, xLinearScale, chosenX);
 
                 if (chosenX === "smokes") {
@@ -306,8 +303,7 @@ d3.csv("assets/data/data.csv").then(function (censusData) {
                 yAxis = renderYAxis(yLinearScale, yAxis);
 
                 scatterPoints = renderPointsY(scatterPoints, yLinearScale, chosenY);
-                scatterPoints = updateToolTip(chosenX, chosenY, scatterPoints);
-
+                circleText = updateToolTip(chosenX, chosenY, circleText);
                 circleText = renderTextY(circleText, yLinearScale, chosenY)
 
                 if (chosenY === "age") {
