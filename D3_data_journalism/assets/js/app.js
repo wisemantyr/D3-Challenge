@@ -1,273 +1,119 @@
-// Define SVG area dimensions
-var svgWidth = 800;
-var svgHeight = 500;
-
-// Define the chart's margins as an object
-var chartMargin = {
-    top: 30,
-    right: 30,
-    bottom: 100,
-    left: 140
-};
-
-// Define dimensions of the chart area
-var chartWidth = svgWidth - chartMargin.left - chartMargin.right;
-var chartHeight = svgHeight - chartMargin.top - chartMargin.bottom;
-
-// Select body, append SVG area to it, and set the dimensions
-var svg = d3.select("#scatter")
-    .append("svg")
-    .attr("height", svgHeight)
-    .attr("width", svgWidth);
-
-//create g tag container for chart area
-var chartGroup = svg.append("g")
-.attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
-
-//initial axes
-var chosenX = "obesity";
-var chosenY = "poverty";
-
-
-//create a scale for the axes dependent on event listener value
-function xScale(censusData, chosenX) {
-    var xLinearScale = d3.scaleLinear()
-        .domain([d3.min(censusData, d => d[chosenX]) * .9, d3.max(censusData, d => d[chosenX]) * 1.1])
-        .range([0, chartWidth]);
-    return xLinearScale;
-}
-function yScale(censusData, chosenY) {
-    var yLinearScale = d3.scaleLinear()
-        .domain([d3.min(censusData, d => d[chosenY]) * .9, d3.max(censusData, d => d[chosenY]) * 1.1])
-        .range([chartHeight, 0]);
-    return yLinearScale;
-}
-
-//create function to create axes on the page with a transition
-function renderXAxis(newXScale, xAxis) {
-    var bottomAxis = d3.axisBottom(newXScale);
-
-    xAxis.transition()
-        .duration(1000)
-        .call(bottomAxis);
-
-    return xAxis;
-}
-function renderYAxis(newYScale, yAxis) {
-    var leftAxis = d3.axisLeft(newYScale);
-
-    yAxis.transition()
-        .duration(1000)
-        .call(leftAxis);
-
-    return yAxis;
-}
-
-//built circles for scatteer plot based on event listener values with a transition
-function renderPointsX(scatterPoints, newXScale, chosenX) {
-    scatterPoints.transition()
-        .duration(1000)
-        .attr("cx", d => newXScale(d[chosenX]));//change the x axis data & scale
-    return scatterPoints;
-}
-function renderPointsY(scatterPoints, newYScale, chosenY) {
-    scatterPoints.transition()
-        .duration(1000)
-        .attr("cy", d => newYScale(d[chosenY])); //change the y axis data & scale
-    return scatterPoints;
-}
-
-//change abbreviated state labels inside of circles based on event listeners
-function renderTextX (circleText, newXScale, chosenX) {
-    circleText.transition()
-        .duration(1000)
-        .attr("x", d => newXScale(d[chosenX])); //change x axis data & scale
-    return circleText;
-}
-function renderTextY (circleText, newYScale, chosenY) {
-    circleText.transition()
-        .duration(1000)
-        .attr("y", d => newYScale(d[chosenY])); //change y axis data & scale
-    return circleText;
-}
-
-//change the tool tips to the correct data
-function updateToolTip(chosenX, chosenY, circleText) {
-    var xLabel;
-    var yLabel;
-
-    if (chosenX === "obesity") { //value for event listener
-        xLabel = "Obesity"; //value inside of tooltip
-        plotTitle1 = "Obesity Rate vs." //plot tile
-    }
-    else if (chosenX === "healthcare") {
-        xLabel = "Has Healthcare";
-        plotTitle1 = "Healthcare Coverage vs.";
-    }
-    else {
-        xLabel = "Smokes"
-        plotTitle1 = "Smoking Rate vs."
-    }
-
-    if (chosenY === "poverty") { 
-        yLabel = "Poverty (%)";
-        plotTitle2 = "Poverty Rate";
-    }
-    else if (chosenY === "income") {
-        yLabel = "Income";
-        plotTitle2 = "Income";
-    }
-    else {
-        yLabel = "Age";
-        plotTitle2 = "Median Age"
-    }
-
-    d3.selectAll(".plotTitle")
-        .html(`${plotTitle1} ${plotTitle2}`);
-
-    var toolTip = d3.tip()
-        .attr("class", "tooltip")
-        .offset([75, 45])
-        .html(function (d) {
-            return (`${d.state} <br> ${xLabel}: ${d[chosenX]}% <br> ${yLabel}: ${d[chosenY]}`)
-        });
-
-    circleText.call(toolTip)
-
-    circleText
-        .on("mouseover", function (d) {
-            toolTip.show(d);
-        })
-        .on("mouseout", function (d) {
-            toolTip.hide(d);
-        });
-
-    return circleText;
-}
+var chosenX = "obesity"; //initial x variable for chart
+var chosenY = "poverty"; //initial y variable for chart
 
 d3.csv("assets/data/data.csv").then(function (censusData) {
     console.log(censusData)
     //transform data types
     censusData.forEach(function (d) {
-        d.poverty = +d.poverty
+        d.poverty = +d.poverty //convert data from strings to numbers
         d.obesity = +d.obesity
         d.age = +d.age
         d.smokes = +d.smokes
         d.income = +d.income
         d.healthcare = +d.healthcare
     });
-    console.log(censusData)
+    console.log(censusData) //check that data was read
 
-    var xLinearScale = xScale(censusData, chosenX);
-    var yLinearScale = yScale(censusData, chosenY);
-    console.log(xLinearScale)
-    console.log(yLinearScale)
+    var xLinearScale = xScale(censusData, chosenX); //set x linear scale variable to scale of initial x value
+    var yLinearScale = yScale(censusData, chosenY); //same for y
+    var bottomAxis = d3.axisBottom(xLinearScale); //create bottom axis with x linear scale
+    var leftAxis = d3.axisLeft(yLinearScale); //create left axis with y linear scale
 
-    var bottomAxis = d3.axisBottom(xLinearScale);
-    var leftAxis = d3.axisLeft(yLinearScale);
-    console.log(bottomAxis)
-    console.log(leftAxis)
-
-    var xAxis = chartGroup.append("g")
-        .classed("x-axis", true)
-        .attr("transform", `translate(0, ${chartHeight})`)
-        .call(bottomAxis);
-    console.log(xAxis)
-    var yAxis = chartGroup.append("g")
+    var xAxis = chartGroup.append("g") //append svg area with g tag for axes
+        .classed("x-axis", true) //create class for css styling
+        .attr("transform", `translate(0, ${chartHeight})`) //move x axis to appropriate place
+        .call(bottomAxis); //add to page
+    var yAxis = chartGroup.append("g") //same as above for y
         .classed("y-axis", true)
         .call(leftAxis);
-    console.log(yAxis)
 
-    var scatterPoints = chartGroup.append("g").selectAll("circle")
-        .data(censusData)
+    var scatterPoints = chartGroup.append("g").selectAll("circle") //append chart area with g tag for circles and select all circles
+        .data(censusData) //attach data to circles
         .enter()
-        .append("circle")
-        .attr("cx", d => xLinearScale(d[chosenX]))
-        .attr("cy", d => yLinearScale(d[chosenY]))
+        .append("circle") //create circle for each data point
+        .attr("cx", d => xLinearScale(d[chosenX])) //change the cx attribute of circles to initial "chosenX" and scale
+        .attr("cy", d => yLinearScale(d[chosenY])) //same for cy
         .attr("r", 12) //size of points
         .attr("fill", "#b3e6b3") //color of points
         .attr("opacity", ".75");
 
-    var circleText = chartGroup.append("g").selectAll("text")
-        .data(censusData)
+    var circleText = chartGroup.append("g").selectAll("text") //apend chart area with g tag for text in circles and select all text tags
+        .data(censusData) //attach data to text tags
         .enter()
-        .append("text")
-        .attr("x", d => xLinearScale(d[chosenX]))
-        .attr("y", d => yLinearScale(d[chosenY]))
-        .attr("text-anchor", "middle")
-        .attr("alignment-baseline", "middle")
+        .append("text") //create text for each data point
+        .attr("x", d => xLinearScale(d[chosenX])) //change the x attribute of text in circles to initial "chosenX" and scale
+        .attr("y", d => yLinearScale(d[chosenY])) //same for y
+        .attr("text-anchor", "middle") //anchor text to middle of text
+        .attr("alignment-baseline", "middle") //same as above
         .attr("stroke", "black")
         .attr("stroke-width", .5)
-        .text(d => d.abbr)
-        .classed("scatterpoint-text", true)
+        .text(d => d.abbr) //set text to abbreviation from data
+        .classed("scatterpoint-text", true) //class for css styling
     
-        //create group for event listener value options
-    var labelsGroupX = chartGroup.append("g")
+    var labelsGroupX = chartGroup.append("g") //create area for x axis labels
         .attr("transform", `translate(${chartWidth / 2}, ${chartHeight + 20})`); //axis position
 
-    var obesityLabel = labelsGroupX.append("text")
-        .attr("x", 0)
-        .attr("y", 20)
+    var obesityLabel = labelsGroupX.append("text") //append created area with text tag
+        .attr("x", 0) 
+        .attr("y", 20) //position of first x axis label
         .attr("value", "obesity") //for event listener
         .classed("active-axis", true) //for styling
-        .text("Obesity Rate (%)"); //axis title
+        .text("Obesity Rate (%)"); //axis label text
 
-    var smokesLabel = labelsGroupX.append("text")
+    var smokesLabel = labelsGroupX.append("text") //append created area with text tag
         .attr("x", 0)
-        .attr("y", 45)
+        .attr("y", 45) //position of the second x axis label
         .attr("value", "smokes") //for event listener
-        .classed("inactive-axis", true)
-        .text("Smoking Rate (%)");
+        .classed("inactive-axis", true) //for styling
+        .text("Smoking Rate (%)"); //axis label text
 
-    var healthcareLabel = labelsGroupX.append("text")
+    var healthcareLabel = labelsGroupX.append("text") //repeat of above
         .attr("x", 0)
-        .attr("y", 70)
-        .attr("value", "healthcare")
-        .classed("inactive-axis", true)
-        .text("Has Healthcare (%)")
+        .attr("y", 70) //position of the third x axis label
+        .attr("value", "healthcare") //for event listener
+        .classed("inactive-axis", true) //for styling
+        .text("Has Healthcare (%)") //axis label text
 
-    var labelsGroupY = chartGroup.append("g")
-        .attr("transform", "rotate(-90)");
+    var labelsGroupY = chartGroup.append("g") //create area for y labels
+        .attr("transform", "rotate(-90)"); //flip vertically
 
-    var povertyLabel = labelsGroupY.append("text")
-        .attr("x", -(chartHeight / 2))
-        .attr("y", -(chartMargin.left/2) + 20)
+    var povertyLabel = labelsGroupY.append("text") //append created area with text tag
+        .attr("x", -(chartHeight / 2)) //middle of y axis
+        .attr("y", -(chartMargin.left/2) + 20) //position of first y axis label
         .attr("value", "poverty") //for event listener
-        .classed("active-axis", true)
-        .text("Poverty Rate (%)");
+        .classed("active-axis", true) //for styling
+        .text("Poverty Rate (%)"); //axis label text
 
-    var ageLabel = labelsGroupY.append("text")
-        .attr("x", -(chartHeight / 2))
-        .attr("y", -(chartMargin.left / 2 + 5))
+    var ageLabel = labelsGroupY.append("text") //append created area with text tag
+        .attr("x", -(chartHeight / 2)) //middle of y axis
+        .attr("y", -(chartMargin.left / 2 + 5)) //position of second y axis label
         .attr("value", "age") //for event listener
-        .classed("inactive-axis", true)
-        .text("Age");
+        .classed("inactive-axis", true) //for styling
+        .text("Age"); //axis label text
 
-    var incomeLabel = labelsGroupY.append("text")
-        .attr("x", -(chartHeight/2))
-        .attr("y", -(chartMargin.left/2 + 30))
-        .attr("value", "income")
-        .classed("inactive-axis", true)
-        .text("Income")
+    var incomeLabel = labelsGroupY.append("text") //append created area with text tag
+        .attr("x", -(chartHeight/2)) //middle of y axis
+        .attr("y", -(chartMargin.left/2 + 30)) //position of third y axis label
+        .attr("value", "income") //for event listener
+        .classed("inactive-axis", true) //for styling
+        .text("Income") //axis label text
 
-    var circleText = updateToolTip(chosenX, chosenY, circleText);
+    var circleText = updateToolTip(chosenX, chosenY, circleText); //tool tips for default view
 
-    labelsGroupX.selectAll("text")
+    labelsGroupX.selectAll("text") //create event listener for x labels
         .on("click", function () {
-            var value = d3.select(this).attr("value");
-            if (value !== chosenX) {
-
-                chosenX = value;
+            var value = d3.select(this).attr("value"); //select value attr of label
+            if (value !== chosenX) { //if value is different than the current selection
+                chosenX = value; //set chosenX to selection value
                 console.log(chosenX);
 
-                xLinearScale = xScale(censusData, chosenX);
-                xAxis = renderXAxis(xLinearScale, xAxis);
+                xLinearScale = xScale(censusData, chosenX); //create new linear scale
+                xAxis = renderXAxis(xLinearScale, xAxis); //create new axis
+                scatterPoints = renderPointsX(scatterPoints, xLinearScale, chosenX); //create points
+                circleText = updateToolTip(chosenX, chosenY, circleText); //update tool tips
+                circleText = renderTextX(circleText, xLinearScale, chosenX); //update text inside of circles
 
-                scatterPoints = renderPointsX(scatterPoints, xLinearScale, chosenX);
-                circleText = updateToolTip(chosenX, chosenY, circleText);
-                circleText = renderTextX(circleText, xLinearScale, chosenX);
-
-                if (chosenX === "smokes") {
+                if (chosenX === "smokes") { //set appropriate styling
                     smokesLabel
                         .classed("active-axis", true)
                         .classed("inactive-axis", false);
@@ -303,22 +149,19 @@ d3.csv("assets/data/data.csv").then(function (censusData) {
             }
         });
 
-    labelsGroupY.selectAll("text")
+    labelsGroupY.selectAll("text") ////create event listener for y labels
         .on("click", function () {
-            var value = d3.select(this).attr("value");
-            if (value !== chosenY) {
-
-                chosenY = value;
+            var value = d3.select(this).attr("value"); //select value attr of label
+            if (value !== chosenY) { //if value is different than the current selection
+                chosenY = value; //set chosenX to selection value
                 console.log(chosenY);
+                yLinearScale = yScale(censusData, chosenY); //create new scale
+                yAxis = renderYAxis(yLinearScale, yAxis); //create axis
+                scatterPoints = renderPointsY(scatterPoints, yLinearScale, chosenY); //update circles
+                circleText = updateToolTip(chosenX, chosenY, circleText); //update tool tips
+                circleText = renderTextY(circleText, yLinearScale, chosenY) //update text in circles
 
-                yLinearScale = yScale(censusData, chosenY);
-                yAxis = renderYAxis(yLinearScale, yAxis);
-
-                scatterPoints = renderPointsY(scatterPoints, yLinearScale, chosenY);
-                circleText = updateToolTip(chosenX, chosenY, circleText);
-                circleText = renderTextY(circleText, yLinearScale, chosenY)
-
-                if (chosenY === "age") {
+                if (chosenY === "age") { //set appropriate styling
                     ageLabel
                         .classed("active-axis", true)
                         .classed("inactive-axis", false);
