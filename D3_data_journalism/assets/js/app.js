@@ -31,6 +31,7 @@ d3.csv("assets/data/data.csv").then(function (censusData) {
         .data(censusData) //attach data to circles
         .enter()
         .append("circle") //create circle for each data point
+        .attr("class", "circles")
         .attr("cx", d => xLinearScale(d[chosenX])) //change the cx attribute of circles to initial "chosenX" and scale
         .attr("cy", d => yLinearScale(d[chosenY])) //same for cy
         .attr("r", 12) //size of points

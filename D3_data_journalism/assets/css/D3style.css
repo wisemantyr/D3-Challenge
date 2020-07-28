@@ -18,6 +18,9 @@
   .scatterpoint-text {
     font-size: small;
   }
+  .scatterpoint-text:hover .tooltip {
+    display: block;
+  }
 
   .tooltip {
     position: absolute;

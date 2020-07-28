@@ -17,7 +17,7 @@ var svg = d3.select("#scatter") //select id tag in index
     .attr("width", svgWidth);
 
 var chartGroup = svg.append("g") //append svg with g tag for the entire chart area
-.attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
+    .attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
 
 function xScale(censusData, chosenX) { //function to scale x-axis data
     var xLinearScale = d3.scaleLinear()
@@ -59,13 +59,13 @@ function renderPointsY(scatterPoints, newYScale, chosenY) { //build points on sc
     return scatterPoints;
 }
 
-function renderTextX (circleText, newXScale, chosenX) { //change abbreviated state labels inside of circles based on event listeners
+function renderTextX(circleText, newXScale, chosenX) { //change abbreviated state labels inside of circles based on event listeners
     circleText.transition() //create appearance of slow transition
         .duration(1000)
         .attr("x", d => newXScale(d[chosenX])); //change the x attribute according to chosen data and scale
     return circleText;
 }
-function renderTextY (circleText, newYScale, chosenY) { //same as above for y attr
+function renderTextY(circleText, newYScale, chosenY) { //same as above for y attr
     circleText.transition()
         .duration(1000)
         .attr("y", d => newYScale(d[chosenY]));
@@ -91,8 +91,8 @@ function updateToolTip(chosenX, chosenY, circleText) {
     }
 
     if (chosenY === "poverty") {
-        yLabel = "Poverty (%)"; 
-        plotTitle2 = "Poverty Rate"; 
+        yLabel = "Poverty (%)";
+        plotTitle2 = "Poverty Rate";
     }
     else if (chosenY === "income") {
         yLabel = "Income";
@@ -106,21 +106,24 @@ function updateToolTip(chosenX, chosenY, circleText) {
     d3.selectAll(".plotTitle") //select element in index
         .html(`${plotTitle1} ${plotTitle2}`); //set html to title depending on above scenarios
 
-    var toolTip = d3.tip() //create tool tip
+    var tooltip = d3.select("#scatter").append("div")
         .attr("class", "tooltip")
-        .offset([75, 45]) //move away from point on plot for readability
-        .html(function (d) { //set html value of tooltip according to above scenarios based on chosen values passed to function
-            return (`${d.state} <br> ${xLabel}: ${d[chosenX]}% <br> ${yLabel}: ${d[chosenY]}`)
-        });
-
-    circleText.call(toolTip) //add tooltip to the abbreviated state labels
-
-    circleText
-        .on("mouseover", function (d) { //call tooltip when area is moused over
-            toolTip.show(d);
-        })
-        .on("mouseout", function (d) { //remove tooltip when mouse move off of area
-            toolTip.hide(d);
-        });
-    return circleText;
+        .style("visibility", "hidden");
+    circleText.on("mouseover", function(d) {
+        var tipHtml = `${d.state} <br> ${xLabel}: ${d[chosenX]}% <br> ${yLabel}: ${d[chosenY]}`;
+        tooltip
+            .html(tipHtml)
+            .style("visibility", "visible")
+            .style("left", (d3.event.pageX) + "px")
+            .style("top", (d3.event.pageY) + "px")
+            .transition()
+            .duration(200) // ms
+            .style("opacity", .9)
+    });
+    circleText.on("mouseout", function(d){
+        tooltip
+            .style("opacity", 0)
+            .transition()
+            .duration(300) // ms
+    });
 };
